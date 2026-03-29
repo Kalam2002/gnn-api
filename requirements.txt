@@ -1,7 +1,7 @@
 fastapi
 uvicorn
-torch==2.2.2
-dgl==1.1.2
+torch
+dgl
 pandas
 numpy
 scikit-learn
