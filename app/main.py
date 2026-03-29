@@ -12,6 +12,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+@app.get("/health")
+def health():
+    return {"status": "running"}
 @app.post("/predict")
 def predict_attack(req: FlowRequest):
     flows = [flow.dict() for flow in req.flows]
