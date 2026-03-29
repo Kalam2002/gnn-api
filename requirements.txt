@@ -1,9 +1,17 @@
 fastapi
 uvicorn
 torch
+<<<<<<< HEAD
 dgl==1.1.2
+=======
+dgl
+>>>>>>> 205ed8c3dd1781b5b1751c252f3b2fbb49c956a3
 pandas
 numpy
 scikit-learn
 category-encoders
+<<<<<<< HEAD
 networkx
+=======
+networkx
+>>>>>>> 205ed8c3dd1781b5b1751c252f3b2fbb49c956a3
