@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+torch
+dgl
+pandas
+numpy
+scikit-learn
+category-encoders
+networkx
+pydantic
