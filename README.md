@@ -194,8 +194,8 @@ Dashboard (Visualization)
 ## 👨‍💻 Contributors
 
 * Abdul Kalam – GNN Model & API
-* Anusha – Honeypot & Blockchain
-* Anupama – Dashboard
+* Anusha Sekhar – Honeypot & Blockchain
+* Anupama Samadder– Dashboard
 
 ---
 
