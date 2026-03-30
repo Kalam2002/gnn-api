@@ -82,24 +82,30 @@ https://gnn-api-t7k7.onrender.com/
 ### 📥 Sample Request
 
 ```json
-{
+
+curl -X 'POST' \
+  'https://gnn-api-t7k7.onrender.com/predict' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
   "flows": [
     {
-      "src_ip": "192.168.1.10",
-      "src_port": 1234,
-      "dst_ip": "192.168.1.20",
-      "dst_port": 80,
+      "src_ip": "192.168.1.193",
+      "src_port": 49180,
+      "dst_ip": "192.168.1.37",
+      "dst_port": 8080,
       "proto": "tcp",
-      "service": "http",
-      "duration": 1.5,
-      "src_bytes": 500,
-      "dst_bytes": 1000,
-      "conn_state": "SF",
-      "src_pkts": 5,
-      "dst_pkts": 10
+      "service": "-",
+      "duration": 0.00013,
+      "src_bytes": 0,
+      "dst_bytes": 0,
+      "conn_state": "REJ",
+      "src_pkts": 1,
+      "dst_pkts": 1
     }
   ]
-}
+}'
+
 ```
 
 ---
@@ -108,7 +114,10 @@ https://gnn-api-t7k7.onrender.com/
 
 ```json
 {
-  "predictions": ["password"]
+  "num_flows": 1,
+  "predictions": [
+    "ddos"
+  ]
 }
 ```
 
