@@ -41,10 +41,9 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         while True:
-            await websocket.receive_text()
+            await asyncio.sleep(1)
     except:
         active_connections.remove(websocket)
-
 # ---------------- ROOT ----------------
 @app.get("/")
 def root():
