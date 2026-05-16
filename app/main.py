@@ -2,7 +2,7 @@ from fastapi import FastAPI, WebSocket
 from app.schemas import FlowRequest
 from app.inference import predict
 from fastapi.middleware.cors import CORSMiddleware
-
+import asyncio
 import sqlite3
 import time
 
