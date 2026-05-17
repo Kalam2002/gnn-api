@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import sqlite3
 import time
+import json
 
 app = FastAPI()
 
@@ -61,7 +62,6 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
-            # Keep connection alive by reading incoming frames
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
@@ -93,11 +93,37 @@ async def predict_attack(req: FlowRequest):
     # ---------------- SAVE TO DB ----------------
     cursor.execute(
         "INSERT INTO logs (request, response, timestamp) VALUES (?, ?, ?)",
-        (str(flows), str(response), payload["timestamp"])
+        (json.dumps(flows), json.dumps(response), payload["timestamp"])
     )
     conn.commit()
 
-    # ---------------- REAL-TIME PUSH ----------------
+    # ---------------- REAL-TIME PUSH (WebSocket) ----------------
     await manager.broadcast(payload)
 
     return response
+
+# ---------------- LOGS (Polling fallback) ----------------
+@app.get("/logs")
+def get_logs(limit: int = 20):
+    cursor.execute(
+        "SELECT id, request, response, timestamp FROM logs ORDER BY timestamp DESC LIMIT ?",
+        (limit,)
+    )
+    rows = cursor.fetchall()
+    result = []
+    for row in rows:
+        try:
+            request_data = json.loads(row[1])
+        except Exception:
+            request_data = []
+        try:
+            response_data = json.loads(row[2])
+        except Exception:
+            response_data = {}
+        result.append({
+            "id": row[0],
+            "request": request_data,
+            "response": response_data,
+            "timestamp": row[3]
+        })
+    return result
