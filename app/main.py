@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from app.schemas import FlowRequest
 from app.inference import predict
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,7 +20,6 @@ app.add_middleware(
 # ---------------- DATABASE ----------------
 conn = sqlite3.connect("logs.db", check_same_thread=False)
 cursor = conn.cursor()
-
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,19 +30,44 @@ CREATE TABLE IF NOT EXISTS logs (
 """)
 conn.commit()
 
-# ---------------- WEBSOCKET ----------------
-active_connections = []
+# ---------------- CONNECTION MANAGER ----------------
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
 
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+
+    async def broadcast(self, payload: dict):
+        dead = []
+        for ws in self.active_connections:
+            try:
+                await ws.send_json(payload)
+            except Exception:
+                dead.append(ws)
+        for ws in dead:
+            self.disconnect(ws)
+
+manager = ConnectionManager()
+
+# ---------------- WEBSOCKET ----------------
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    active_connections.append(websocket)
-
+    await manager.connect(websocket)
     try:
         while True:
-            await asyncio.sleep(1)
-    except:
-        active_connections.remove(websocket)
+            # Keep connection alive by reading incoming frames
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    except Exception:
+        manager.disconnect(websocket)
+
 # ---------------- ROOT ----------------
 @app.get("/")
 def root():
@@ -53,7 +77,6 @@ def root():
 @app.post("/predict")
 async def predict_attack(req: FlowRequest):
     flows = [flow.dict() for flow in req.flows]
-
     preds = predict(flows)
 
     response = {
@@ -61,7 +84,6 @@ async def predict_attack(req: FlowRequest):
         "predictions": preds.tolist()
     }
 
-    # Combine request + response
     payload = {
         "timestamp": time.time(),
         "request": flows,
@@ -76,7 +98,6 @@ async def predict_attack(req: FlowRequest):
     conn.commit()
 
     # ---------------- REAL-TIME PUSH ----------------
-    for ws in active_connections:
-        await ws.send_json(payload)
+    await manager.broadcast(payload)
 
     return response
